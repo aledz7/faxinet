@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { View, Text, Pressable, ScrollView, Alert } from 'react-native';
+import { View, Text, Pressable, ScrollView, Alert, Linking } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Calendar, Clock, MapPin, Phone, Check, X, ChevronRight } from 'lucide-react-native';
+import { Calendar, Clock, MapPin, Check, X, ChevronRight } from 'lucide-react-native';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { useRouter } from 'expo-router';
 
@@ -14,7 +14,6 @@ const mockServices = [
     clientName: 'Maria Silva',
     address: 'Rua das Flores, 123, Apto 45',
     city: 'Centro - São Paulo/SP',
-    phone: '(11) 98765-4321',
     price: 150.00,
     serviceType: 'Limpeza Completa',
     status: 'pending',
@@ -27,7 +26,6 @@ const mockServices = [
     clientName: 'João Santos',
     address: 'Av. Paulista, 1000, Apto 12',
     city: 'Bela Vista - São Paulo/SP',
-    phone: '(11) 91234-5678',
     price: 120.00,
     serviceType: 'Limpeza Padrão',
     status: 'confirmed',
@@ -40,7 +38,6 @@ const mockServices = [
     clientName: 'Ana Oliveira',
     address: 'Rua Augusta, 500, Casa 2',
     city: 'Consolação - São Paulo/SP',
-    phone: '(11) 99876-5432',
     price: 180.00,
     serviceType: 'Limpeza Pós-Obra',
     status: 'pending',
@@ -128,12 +125,9 @@ export default function AgendaScreen() {
     );
   };
 
-  const handleCall = (phone: string) => {
-    Alert.alert('Ligar', `Ligar para ${phone}?`);
-  };
-
   const handleViewMap = (address: string) => {
-    Alert.alert('Mapa', `Abrir mapa para: ${address}`);
+    const url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
+    Linking.openURL(url).catch(err => Alert.alert('Erro', 'Não foi possível detectar o aplicativo de mapas'));
   };
 
   const navigateToDetails = (service: any) => {
@@ -240,20 +234,13 @@ export default function AgendaScreen() {
                 <View className="flex-row items-start gap-2">
                   <MapPin color="#FF6B1A" size={18} />
                   <View className="flex-1">
-                    <Text className={`text-muted-foreground text-sm ${isRefused ? 'line-through' : ''}`}>
+                    <Text className={`text-foreground font-medium ${isRefused ? 'line-through' : ''}`}>
                       {service.address}
                     </Text>
                     <Text className="text-muted-foreground text-xs">
                       {service.city}
                     </Text>
                   </View>
-                </View>
-
-                <View className="flex-row items-center gap-2">
-                  <Phone color="#7CB342" size={18} />
-                  <Pressable onPress={() => handleCall(service.phone)}>
-                    <Text className="text-primary font-medium">{service.phone}</Text>
-                  </Pressable>
                 </View>
               </View>
 

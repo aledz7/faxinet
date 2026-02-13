@@ -3,6 +3,7 @@ import { View, Text, ScrollView, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Calendar, TrendingUp, DollarSign, Filter, ChevronRight } from 'lucide-react-native';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import { useRouter } from 'expo-router';
 
 // Mock data for historical services
 const mockHistoryServices = [
@@ -66,6 +67,7 @@ const mockHistoryServices = [
 type FilterPeriod = 'all' | 'month' | 'quarter';
 
 export default function HistoricoScreen() {
+  const router = useRouter();
   const [selectedFilter, setSelectedFilter] = useState<FilterPeriod>('all');
   const [services] = useState(mockHistoryServices);
 
@@ -100,8 +102,8 @@ export default function HistoricoScreen() {
         </View>
 
         {/* Filter Pills */}
-        <ScrollView 
-          horizontal 
+        <ScrollView
+          horizontal
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={{ gap: 8 }}
         >
@@ -109,16 +111,14 @@ export default function HistoricoScreen() {
             <Pressable
               key={filter.id}
               onPress={() => setSelectedFilter(filter.id as FilterPeriod)}
-              className={`px-4 py-2 rounded-full border ${
-                selectedFilter === filter.id
+              className={`px-4 py-2 rounded-full border ${selectedFilter === filter.id
                   ? 'bg-white border-white'
                   : 'bg-transparent border-white/30'
-              }`}
+                }`}
             >
               <Text
-                className={`text-sm font-semibold ${
-                  selectedFilter === filter.id ? 'text-primary' : 'text-white'
-                }`}
+                className={`text-sm font-semibold ${selectedFilter === filter.id ? 'text-primary' : 'text-white'
+                  }`}
               >
                 {filter.label}
               </Text>
@@ -172,6 +172,7 @@ export default function HistoricoScreen() {
         {services.map((service) => (
           <Pressable
             key={service.id}
+            onPress={() => router.push('/servico-detalhes')}
             className="bg-card rounded-2xl p-4 mb-4 border border-border"
           >
             {/* Header with date and status */}
@@ -219,10 +220,10 @@ export default function HistoricoScreen() {
                 </Text>
               </View>
 
-              <Pressable className="flex-row items-center gap-1 bg-muted px-3 py-2 rounded-xl">
+              <View className="flex-row items-center gap-1 bg-muted px-3 py-2 rounded-xl">
                 <Text className="text-foreground font-medium text-sm">Ver Detalhes</Text>
                 <ChevronRight color="#9E9E9E" size={16} />
-              </Pressable>
+              </View>
             </View>
           </Pressable>
         ))}

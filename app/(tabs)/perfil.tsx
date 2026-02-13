@@ -1,13 +1,13 @@
 import React from 'react';
-import { View, Text, ScrollView, Image, Pressable, Alert } from 'react-native';
+import { View, Text, ScrollView, Image, Pressable, Alert, Linking, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import { 
-  User, 
-  MapPin, 
-  Phone, 
-  Mail, 
-  ChevronRight, 
+import {
+  User,
+  MapPin,
+  Phone,
+  Mail,
+  ChevronRight,
   LogOut,
   HelpCircle,
   Edit
@@ -18,29 +18,42 @@ import { ThemeToggle } from '@/components/ThemeToggle';
 export default function PerfilScreen() {
   const router = useRouter();
 
-  const handleWhatsAppHelp = () => {
-    const whatsappUrl = 'https://api.whatsapp.com/send?phone=556198524612&text=Preciso%20de%20ajuda';
-    // In a real app, you would use Linking.openURL(whatsappUrl)
-    Alert.alert('WhatsApp', `Abrir WhatsApp: ${whatsappUrl}`);
+  const handleWhatsAppHelp = async () => {
+    const whatsappUrl = 'https://wa.me/556198524612?text=Preciso%20de%20ajuda';
+    const supported = await Linking.canOpenURL(whatsappUrl);
+
+    if (supported) {
+      await Linking.openURL(whatsappUrl);
+    } else {
+      Alert.alert('Erro', 'Não foi possível abrir o WhatsApp. Verifique se o aplicativo está instalado.');
+    }
   };
 
   const handleLogout = () => {
-    Alert.alert(
-      'Sair',
-      'Deseja realmente sair da sua conta?',
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        { text: 'Sair', style: 'destructive', onPress: () => {
-          // Navigate to login
-          router.replace('/login');
-        }},
-      ]
-    );
+    const onConfirmLogout = () => {
+      // Em uma aplicação real, aqui você limparia os tokens/sessão
+      router.replace('/login');
+    };
+
+    if (Platform.OS === 'web') {
+      if (confirm('Deseja realmente sair da sua conta?')) {
+        onConfirmLogout();
+      }
+    } else {
+      Alert.alert(
+        'Sair',
+        'Deseja realmente sair da sua conta?',
+        [
+          { text: 'Cancelar', style: 'cancel' },
+          { text: 'Sair', style: 'destructive', onPress: onConfirmLogout },
+        ]
+      );
+    }
   };
 
   return (
     <SafeAreaView className="flex-1 bg-background">
-      <ScrollView 
+      <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 24 }}
       >
@@ -81,7 +94,7 @@ export default function PerfilScreen() {
         {/* Personal Info */}
         <View className="mx-4 mb-6">
           <Text className="text-foreground font-semibold text-lg mb-4">Informações Pessoais</Text>
-          
+
           <View className="bg-card rounded-2xl overflow-hidden">
             <View className="flex-row items-center p-4 border-b border-border">
               <View className="w-10 h-10 rounded-full bg-primary/10 items-center justify-center mr-4">
@@ -118,7 +131,7 @@ export default function PerfilScreen() {
         {/* Menu Options */}
         <View className="mx-4 mb-6">
           <Text className="text-foreground font-semibold text-lg mb-4">Menu</Text>
-          
+
           <View className="bg-card rounded-2xl overflow-hidden">
             {/* Editar Perfil */}
             <Pressable

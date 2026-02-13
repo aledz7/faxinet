@@ -1,7 +1,7 @@
 import React from 'react';
-import { View, Text, ScrollView, Pressable, Alert, Image } from 'react-native';
+import { View, Text, ScrollView, Pressable, Alert, Image, Linking } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { ArrowLeft, Calendar, Clock, Phone, MapPin, DollarSign, Info, Check, X, Navigation } from 'lucide-react-native';
+import { ArrowLeft, Calendar, Clock, MapPin, DollarSign, Info, Check, X, Navigation } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 
 // Mock service data for the details screen
@@ -12,7 +12,6 @@ const mockService = {
   endTime: '13:00',
   clientName: 'Maria Silva',
   clientAvatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=900&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTJ8fHBvcnRyYWl0JTIwd29tYW58ZW58MHx8MHx8fDA%3D',
-  phone: '(11) 98765-4321',
   address: 'Rua das Flores, 123',
   addressDetails: 'Apto 45, Bloco B',
   neighborhood: 'Centro',
@@ -20,19 +19,17 @@ const mockService = {
   zipCode: '01234-567',
   price: 150.00,
   serviceType: 'Limpeza Completa',
-  status: 'pending', // 'pending' | 'confirmed' | 'completed'
+  status: 'confirmed', // Alterado para confirmed conforme solicitado
   observations: 'Possui 2 cachorros. Deixar chave com porteiro. Trazer produtos próprios.',
 };
 
 export default function ServicoDetalhesScreen() {
   const router = useRouter();
 
-  const handleCall = () => {
-    Alert.alert('Ligar', `Deseja ligar para ${mockService.phone}?`);
-  };
-
   const handleOpenMap = () => {
-    Alert.alert('Mapa', 'Abrir localização no mapa');
+    const address = `${mockService.address}, ${mockService.neighborhood}, ${mockService.city}`;
+    const url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
+    Linking.openURL(url).catch(err => Alert.alert('Erro', 'Não foi possível detectar o aplicativo de mapas'));
   };
 
   const handleAccept = () => {
@@ -123,10 +120,7 @@ export default function ServicoDetalhesScreen() {
             />
             <View className="flex-1">
               <Text className="text-foreground text-lg font-bold">{mockService.clientName}</Text>
-              <Pressable onPress={handleCall} className="flex-row items-center gap-2 mt-2">
-                <Phone color="#7CB342" size={18} />
-                <Text className="text-primary font-medium">{mockService.phone}</Text>
-              </Pressable>
+              <Text className="text-muted-foreground text-sm mt-1">Cliente Verificado</Text>
             </View>
           </View>
         </View>
@@ -149,10 +143,10 @@ export default function ServicoDetalhesScreen() {
             <Text className="text-muted-foreground text-sm">{mockService.neighborhood} - {mockService.city}</Text>
             <Text className="text-muted-foreground text-xs">CEP: {mockService.zipCode}</Text>
           </View>
-          
+
           {/* Map Placeholder */}
           <View className="mt-3 h-32 bg-gray-100 rounded-xl overflow-hidden relative">
-            <Image 
+            <Image
               source={{ uri: "https://images.unsplash.com/photo-1524661135-423995f22d0b?w=900&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NHx8Q2l0eSUyMG1hcHxlbnwwfHwwfHx8MA%3D%3D" }}
               className="w-full h-full opacity-60"
               resizeMode="cover"
@@ -184,7 +178,7 @@ export default function ServicoDetalhesScreen() {
             <Info color="#3B82F6" size={20} />
             <Text className="text-foreground font-semibold">Detalhes do Serviço</Text>
           </View>
-          
+
           <View className="mb-4">
             <Text className="text-muted-foreground text-xs uppercase tracking-wide mb-1">Tipo de Serviço</Text>
             <Text className="text-foreground font-medium text-base">{mockService.serviceType}</Text>
@@ -230,11 +224,11 @@ export default function ServicoDetalhesScreen() {
               <Text className="text-white font-bold text-base">Como Chegar</Text>
             </Pressable>
             <Pressable
-              onPress={() => Alert.alert('Cancelar', 'Funcionalidade em desenvolvimento')}
+              onPress={() => router.back()}
               className="flex-1 bg-gray-100 py-4 rounded-xl flex-row items-center justify-center gap-2"
             >
-              <X color="#757575" size={20} />
-              <Text className="text-gray-700 font-bold text-base">Cancelar</Text>
+              <ArrowLeft color="#757575" size={20} />
+              <Text className="text-gray-700 font-bold text-base">Voltar</Text>
             </Pressable>
           </View>
         )}

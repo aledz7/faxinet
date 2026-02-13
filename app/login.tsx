@@ -19,7 +19,7 @@ export default function LoginScreen() {
     }
 
     setIsLoading(true);
-    
+
     // Simulate API call
     setTimeout(() => {
       setIsLoading(false);
@@ -32,7 +32,7 @@ export default function LoginScreen() {
   return (
     <SafeAreaView className="flex-1 bg-background">
       <View className="flex-1 px-6 justify-center">
-        
+
         {/* Header with Theme Toggle */}
         <View className="absolute top-4 right-4">
           <ThemeToggle />
@@ -40,8 +40,12 @@ export default function LoginScreen() {
 
         {/* Logo Section */}
         <View className="items-center mb-10">
-          <View className="bg-primary w-24 h-24 rounded-full items-center justify-center mb-4 shadow-lg">
-            <Text className="text-white text-4xl font-bold">F</Text>
+          <View className="mb-4 shadow-lg overflow-hidden" style={{ borderRadius: 20 }}>
+            <Image
+              source={require('../assets/images/logo-faxinet.jpeg')}
+              style={{ width: 120, height: 120 }}
+              resizeMode="contain"
+            />
           </View>
           <Text className="text-foreground text-3xl font-bold tracking-tight">FaxiNet</Text>
           <Text className="text-muted-foreground text-sm mt-1">Sua plataforma de serviços</Text>
@@ -91,7 +95,7 @@ export default function LoginScreen() {
 
           {/* Forgot Password Link */}
           <View className="items-end mt-1">
-            <Pressable onPress={() => Alert.alert('Recuperar Senha', 'Funcionalidade em desenvolvimento')}>
+            <Pressable onPress={() => router.push('/recuperar-senha')}>
               <Text className="text-primary font-semibold text-sm">Esqueci minha senha</Text>
             </Pressable>
           </View>
@@ -117,7 +121,9 @@ export default function LoginScreen() {
         <View className="mt-12 items-center">
           <Text className="text-muted-foreground text-xs">
             Ao entrar, você concorda com nossos{' '}
-            <Text className="text-primary font-semibold">Termos de Uso</Text>
+            <Pressable onPress={() => router.push('/termos')}>
+              <Text className="text-primary font-semibold">Termos de Uso</Text>
+            </Pressable>
           </Text>
         </View>
       </View>
