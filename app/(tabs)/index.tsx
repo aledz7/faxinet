@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
-import { View, Text, Pressable, ScrollView, Alert, Linking } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
+import { View, Text, Pressable, ScrollView, Linking, Animated, Platform, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Calendar, Clock, MapPin, Check, X, ChevronRight } from 'lucide-react-native';
+import { Calendar, Clock, MapPin, Check, X, ChevronRight, AlertTriangle, CheckCircle, XCircle } from 'lucide-react-native';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { useRouter } from 'expo-router';
 
@@ -77,57 +77,290 @@ const getStatusBadge = (status: ServiceStatus) => {
   }
 };
 
+type ConfirmModalData = {
+  visible: boolean;
+  type: 'accept' | 'refuse';
+  serviceId: number | null;
+  serviceName: string;
+};
+
+type ToastData = {
+  visible: boolean;
+  type: 'success' | 'refused';
+  message: string;
+};
+
+const fixedFull = Platform.OS === 'web'
+  ? { position: 'fixed' as any, top: 0, left: 0, right: 0, bottom: 0 }
+  : { position: 'absolute' as const, top: 0, left: 0, right: 0, bottom: 0 };
+
+function ConfirmModal({
+  data,
+  onConfirm,
+  onCancel,
+}: {
+  data: ConfirmModalData;
+  onConfirm: () => void;
+  onCancel: () => void;
+}) {
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const scaleAnim = useRef(new Animated.Value(0.85)).current;
+
+  useEffect(() => {
+    if (data.visible) {
+      fadeAnim.setValue(0);
+      scaleAnim.setValue(0.85);
+      Animated.parallel([
+        Animated.timing(fadeAnim, { toValue: 1, duration: 250, useNativeDriver: true }),
+        Animated.spring(scaleAnim, { toValue: 1, friction: 8, tension: 100, useNativeDriver: true }),
+      ]).start();
+    }
+  }, [data.visible]);
+
+  if (!data.visible) return null;
+
+  const isAccept = data.type === 'accept';
+
+  return (
+    <View style={[fixedFull, { zIndex: 9999, justifyContent: 'center', alignItems: 'center' }]}>
+      {/* Backdrop semi-transparente */}
+      <View
+        style={[
+          fixedFull,
+          { backgroundColor: 'rgba(0,0,0,0.4)' },
+        ]}
+      />
+      {/* Backdrop pressável transparente */}
+      <Pressable
+        style={[fixedFull, { zIndex: 1 }]}
+        onPress={onCancel}
+        accessibilityRole="button"
+        accessibilityLabel="Fechar modal"
+      />
+
+      {/* Card do modal */}
+      <Animated.View
+        style={{
+          transform: [{ scale: scaleAnim }],
+          backgroundColor: '#fff',
+          borderRadius: 24,
+          padding: 28,
+          width: '85%',
+          maxWidth: 360,
+          zIndex: 2,
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: 12 },
+          shadowOpacity: 0.3,
+          shadowRadius: 24,
+          elevation: 20,
+        }}
+      >
+        <View style={{ alignItems: 'center', marginBottom: 20 }}>
+          <View
+            style={{
+              width: 72,
+              height: 72,
+              borderRadius: 36,
+              backgroundColor: isAccept ? '#dcfce7' : '#fee2e2',
+              justifyContent: 'center',
+              alignItems: 'center',
+            }}
+          >
+            {isAccept ? (
+              <CheckCircle color="#16a34a" size={40} />
+            ) : (
+              <AlertTriangle color="#dc2626" size={40} />
+            )}
+          </View>
+        </View>
+
+        <Text style={{ fontSize: 20, fontWeight: '700', textAlign: 'center', marginBottom: 8, color: '#1c1917' }}>
+          {isAccept ? 'Confirmar Serviço' : 'Recusar Serviço'}
+        </Text>
+        <Text style={{ fontSize: 15, textAlign: 'center', color: '#78716c', marginBottom: 4, lineHeight: 22 }}>
+          {isAccept
+            ? 'Deseja aceitar o serviço de'
+            : 'Tem certeza que deseja recusar o serviço de'}
+        </Text>
+        <Text style={{ fontSize: 16, fontWeight: '600', textAlign: 'center', marginBottom: 24, color: '#1c1917' }}>
+          {data.serviceName}?
+        </Text>
+
+        <View style={{ flexDirection: 'row', gap: 12 }}>
+          <Pressable
+            onPress={onCancel}
+            accessibilityRole="button"
+            accessibilityLabel="Cancelar"
+            style={{
+              flex: 1,
+              backgroundColor: '#f3f4f6',
+              paddingVertical: 14,
+              borderRadius: 14,
+              alignItems: 'center',
+            }}
+          >
+            <Text style={{ color: '#4b5563', fontWeight: '600', fontSize: 15 }}>Cancelar</Text>
+          </Pressable>
+          <Pressable
+            onPress={onConfirm}
+            accessibilityRole="button"
+            accessibilityLabel={isAccept ? 'Confirmar aceitar' : 'Confirmar recusar'}
+            style={{
+              flex: 1,
+              backgroundColor: isAccept ? '#16a34a' : '#ef4444',
+              paddingVertical: 14,
+              borderRadius: 14,
+              alignItems: 'center',
+            }}
+          >
+            <Text style={{ color: '#fff', fontWeight: '600', fontSize: 15 }}>
+              {isAccept ? 'Aceitar' : 'Recusar'}
+            </Text>
+          </Pressable>
+        </View>
+      </Animated.View>
+    </View>
+  );
+}
+
+function Toast({ data, onHide }: { data: ToastData; onHide: () => void }) {
+  const slideAnim = useRef(new Animated.Value(-100)).current;
+  const opacityAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    if (data.visible) {
+      slideAnim.setValue(-100);
+      opacityAnim.setValue(0);
+      Animated.parallel([
+        Animated.spring(slideAnim, { toValue: 0, friction: 8, tension: 80, useNativeDriver: true }),
+        Animated.timing(opacityAnim, { toValue: 1, duration: 200, useNativeDriver: true }),
+      ]).start();
+
+      const timer = setTimeout(() => {
+        Animated.parallel([
+          Animated.timing(slideAnim, { toValue: -100, duration: 300, useNativeDriver: true }),
+          Animated.timing(opacityAnim, { toValue: 0, duration: 300, useNativeDriver: true }),
+        ]).start(() => onHide());
+      }, 2500);
+
+      return () => clearTimeout(timer);
+    }
+  }, [data.visible]);
+
+  if (!data.visible) return null;
+
+  const isSuccess = data.type === 'success';
+
+  return (
+    <Animated.View
+      style={{
+        transform: [{ translateY: slideAnim }],
+        opacity: opacityAnim,
+        position: 'absolute',
+        top: 50,
+        left: 16,
+        right: 16,
+        zIndex: 10000,
+      }}
+    >
+      <View
+        style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: 10,
+          paddingHorizontal: 16,
+          paddingVertical: 14,
+          borderRadius: 16,
+          backgroundColor: isSuccess ? '#16a34a' : '#52525b',
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: 4 },
+          shadowOpacity: 0.2,
+          shadowRadius: 12,
+          elevation: 10,
+        }}
+      >
+        {isSuccess ? (
+          <CheckCircle color="white" size={22} />
+        ) : (
+          <XCircle color="white" size={22} />
+        )}
+        <Text style={{ color: '#fff', fontWeight: '600', fontSize: 15, flex: 1 }}>{data.message}</Text>
+      </View>
+    </Animated.View>
+  );
+}
+
 export default function AgendaScreen() {
   const router = useRouter();
   const [services, setServices] = useState(mockServices);
   const newAppointments = services.filter(s => s.status === 'pending').length;
 
+  const [confirmModal, setConfirmModal] = useState<ConfirmModalData>({
+    visible: false,
+    type: 'accept',
+    serviceId: null,
+    serviceName: '',
+  });
+
+  const [toast, setToast] = useState<ToastData>({
+    visible: false,
+    type: 'success',
+    message: '',
+  });
+
+  const showToast = (type: 'success' | 'refused', message: string) => {
+    setToast({ visible: true, type, message });
+  };
+
   const handleAccept = (id: number) => {
-    Alert.alert(
-      'Confirmar Serviço',
-      'Deseja aceitar este serviço?',
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        {
-          text: 'Aceitar',
-          style: 'default',
-          onPress: () => {
-            setServices(prev =>
-              prev.map(service =>
-                service.id === id ? { ...service, status: 'confirmed' } : service
-              )
-            );
-            Alert.alert('Sucesso', 'Serviço confirmado com sucesso!');
-          },
-        },
-      ]
-    );
+    const service = services.find(s => s.id === id);
+    if (!service) return;
+    setConfirmModal({
+      visible: true,
+      type: 'accept',
+      serviceId: id,
+      serviceName: service.clientName,
+    });
   };
 
   const handleRefuse = (id: number) => {
-    Alert.alert(
-      'Recusar Serviço',
-      'Deseja recusar este serviço?',
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        {
-          text: 'Recusar',
-          style: 'destructive',
-          onPress: () => {
-            setServices(prev =>
-              prev.map(service =>
-                service.id === id ? { ...service, status: 'refused' } : service
-              )
-            );
-          },
-        },
-      ]
+    const service = services.find(s => s.id === id);
+    if (!service) return;
+    setConfirmModal({
+      visible: true,
+      type: 'refuse',
+      serviceId: id,
+      serviceName: service.clientName,
+    });
+  };
+
+  const handleConfirmAction = () => {
+    const { type, serviceId } = confirmModal;
+    if (serviceId === null) return;
+
+    const newStatus = type === 'accept' ? 'confirmed' : 'refused';
+    setServices(prev =>
+      prev.map(service =>
+        service.id === serviceId ? { ...service, status: newStatus } : service
+      )
     );
+
+    setConfirmModal({ visible: false, type: 'accept', serviceId: null, serviceName: '' });
+
+    if (type === 'accept') {
+      showToast('success', 'Serviço confirmado com sucesso!');
+    } else {
+      showToast('refused', 'Serviço recusado.');
+    }
+  };
+
+  const handleCancelAction = () => {
+    setConfirmModal({ visible: false, type: 'accept', serviceId: null, serviceName: '' });
   };
 
   const handleViewMap = (address: string) => {
     const url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
-    Linking.openURL(url).catch(err => Alert.alert('Erro', 'Não foi possível detectar o aplicativo de mapas'));
+    Linking.openURL(url);
   };
 
   const navigateToDetails = (service: any) => {
@@ -136,6 +369,13 @@ export default function AgendaScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-background">
+      <Toast data={toast} onHide={() => setToast(prev => ({ ...prev, visible: false }))} />
+      <ConfirmModal
+        data={confirmModal}
+        onConfirm={handleConfirmAction}
+        onCancel={handleCancelAction}
+      />
+
       {/* Header */}
       <View className="bg-primary px-5 pt-4 pb-6">
         <View className="flex-row items-center justify-between mb-4">
@@ -260,6 +500,8 @@ export default function AgendaScreen() {
                   <View className="flex-row gap-2">
                     <Pressable
                       onPress={() => handleRefuse(service.id)}
+                      accessibilityRole="button"
+                      accessibilityLabel={`Recusar ${service.clientName}`}
                       className="bg-gray-200 px-4 py-2 rounded-xl flex-row items-center gap-1"
                     >
                       <X color="#757575" size={18} />
@@ -267,6 +509,8 @@ export default function AgendaScreen() {
                     </Pressable>
                     <Pressable
                       onPress={() => handleAccept(service.id)}
+                      accessibilityRole="button"
+                      accessibilityLabel={`Aceitar ${service.clientName}`}
                       className="bg-green-600 px-4 py-2 rounded-xl flex-row items-center gap-1"
                     >
                       <Check color="white" size={18} />

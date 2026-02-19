@@ -1,8 +1,8 @@
 import { Tabs } from 'expo-router';
 import { Calendar, List, Bell, User } from 'lucide-react-native';
+import { Text } from 'react-native';
 import { cssInterop, useColorScheme } from 'nativewind';
 
-// Enable className support for Lucide icons
 cssInterop(Calendar, { className: { target: 'style', nativeStyleToProp: { color: true } } });
 cssInterop(List, { className: { target: 'style', nativeStyleToProp: { color: true } } });
 cssInterop(Bell, { className: { target: 'style', nativeStyleToProp: { color: true } } });
@@ -12,7 +12,6 @@ export default function TabsLayout() {
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === 'dark';
 
-  // FaxiNet brand colors
   const backgroundColor = isDark ? '#1c1917' : '#FFFFFF';
   const borderTopColor = isDark ? '#44403c' : '#E0E0E0';
   const activeTintColor = '#FF6B1A';
@@ -32,10 +31,17 @@ export default function TabsLayout() {
         },
         tabBarActiveTintColor: activeTintColor,
         tabBarInactiveTintColor: inactiveTintColor,
-        tabBarLabelStyle: {
-          fontSize: 12,
-          fontWeight: '600',
-        },
+        tabBarLabel: ({ focused, children }) => (
+          <Text
+            style={{
+              color: focused ? activeTintColor : inactiveTintColor,
+              fontSize: 12,
+              fontWeight: '600',
+            }}
+          >
+            {children}
+          </Text>
+        ),
       }}
     >
       <Tabs.Screen
