@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Mail, Lock, Eye, EyeOff, LogIn } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import { saveSession } from '@/lib/offline-first';
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -20,25 +21,26 @@ export default function LoginScreen() {
 
     setIsLoading(true);
 
-    // Simulate API call
-    setTimeout(() => {
+    // Fluxo mock com persistência local para permitir uso offline.
+    setTimeout(async () => {
+      await saveSession({
+        email,
+        loggedInAt: new Date().toISOString(),
+      });
+
       setIsLoading(false);
-      // In a real app, validate credentials here
-      Alert.alert('Sucesso', 'Login realizado com sucesso!');
-      router.replace('/(tabs)'); // Navigate to main tabs
+      Alert.alert('Sucesso', 'Login realizado com sucesso! Você pode usar o app offline.');
+      router.replace('/(tabs)');
     }, 1500);
   };
 
   return (
     <SafeAreaView className="flex-1 bg-background">
       <View className="flex-1 px-6 justify-center">
-
-        {/* Header with Theme Toggle */}
         <View className="absolute top-4 right-4">
           <ThemeToggle />
         </View>
 
-        {/* Logo Section */}
         <View className="items-center mb-10">
           <View className="mb-4 shadow-lg overflow-hidden" style={{ borderRadius: 20 }}>
             <Image
@@ -49,11 +51,10 @@ export default function LoginScreen() {
           </View>
           <Text className="text-foreground text-3xl font-bold tracking-tight">FaxiNet</Text>
           <Text className="text-muted-foreground text-sm mt-1">Sua plataforma de serviços</Text>
+          <Text className="text-muted-foreground text-xs mt-1">Modo offline sempre disponível</Text>
         </View>
 
-        {/* Form Section */}
         <View className="space-y-4">
-          {/* Email Input */}
           <View className="space-y-2">
             <Text className="text-foreground font-medium text-base ml-1">Email</Text>
             <View className="flex-row items-center bg-card border border-input rounded-2xl px-4 h-14">
@@ -70,7 +71,6 @@ export default function LoginScreen() {
             </View>
           </View>
 
-          {/* Password Input */}
           <View className="space-y-2">
             <Text className="text-foreground font-medium text-base ml-1">Senha</Text>
             <View className="flex-row items-center bg-card border border-input rounded-2xl px-4 h-14">
@@ -93,14 +93,12 @@ export default function LoginScreen() {
             </View>
           </View>
 
-          {/* Forgot Password Link */}
           <View className="items-end mt-1">
             <Pressable onPress={() => router.push('/recuperar-senha')}>
               <Text className="text-primary font-semibold text-sm">Esqueci minha senha</Text>
             </Pressable>
           </View>
 
-          {/* Login Button */}
           <Pressable
             onPress={handleLogin}
             disabled={isLoading}
@@ -117,7 +115,6 @@ export default function LoginScreen() {
           </Pressable>
         </View>
 
-        {/* Footer Info */}
         <View className="mt-12 items-center">
           <Text className="text-muted-foreground text-xs">
             Ao entrar, você concorda com nossos{' '}

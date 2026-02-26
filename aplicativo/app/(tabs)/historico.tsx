@@ -1,75 +1,34 @@
-import React, { useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { View, Text, ScrollView, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Calendar, TrendingUp, DollarSign, Filter, ChevronRight } from 'lucide-react-native';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { useRouter } from 'expo-router';
-
-// Mock data for historical services
-const mockHistoryServices = [
-  {
-    id: 1,
-    date: '10/02/2025',
-    time: '14:00',
-    clientName: 'Carlos Oliveira',
-    address: 'Av. Brasil, 500',
-    city: 'Jardins - São Paulo/SP',
-    price: 180.00,
-    serviceType: 'Limpeza Pós-Obra',
-    status: 'completed',
-  },
-  {
-    id: 2,
-    date: '08/02/2025',
-    time: '09:00',
-    clientName: 'Fernanda Lima',
-    address: 'Rua Augusta, 1200',
-    city: 'Consolação - São Paulo/SP',
-    price: 150.00,
-    serviceType: 'Limpeza Completa',
-    status: 'completed',
-  },
-  {
-    id: 3,
-    date: '05/02/2025',
-    time: '10:30',
-    clientName: 'Roberto Santos',
-    address: 'Rua das Palmeiras, 45',
-    city: 'Pinheiros - São Paulo/SP',
-    price: 120.00,
-    serviceType: 'Limpeza Padrão',
-    status: 'completed',
-  },
-  {
-    id: 4,
-    date: '01/02/2025',
-    time: '08:00',
-    clientName: 'Juliana Costa',
-    address: 'Alameda Santos, 2000',
-    city: 'Bela Vista - São Paulo/SP',
-    price: 200.00,
-    serviceType: 'Limpeza Completa',
-    status: 'completed',
-  },
-  {
-    id: 5,
-    date: '28/01/2025',
-    time: '13:00',
-    clientName: 'Marcos Pereira',
-    address: 'Rua Haddock Lobo, 900',
-    city: 'Jardins - São Paulo/SP',
-    price: 160.00,
-    serviceType: 'Limpeza Padrão',
-    status: 'completed',
-  },
-];
+import { useFocusEffect } from '@react-navigation/native';
+import { type Service, getAppState } from '@/lib/offline-first';
 
 type FilterPeriod = 'all' | 'month' | 'quarter';
 
 export default function HistoricoScreen() {
   const router = useRouter();
   const [selectedFilter, setSelectedFilter] = useState<FilterPeriod>('all');
-  const [services] = useState(mockHistoryServices);
+  const [services, setServices] = useState<Service[]>([]);
+
+  const loadHistory = useCallback(async () => {
+    const state = await getAppState();
+    const completedServices = state.services.filter((service) => service.status === 'completed');
+    setServices(completedServices);
+  }, []);
+
+  useEffect(() => {
+    void loadHistory();
+  }, [loadHistory]);
+
+  useFocusEffect(
+    useCallback(() => {
+      void loadHistory();
+    }, [loadHistory])
+  );
 
   // Calculate totals
   const totalServices = services.length;

@@ -1,25 +1,23 @@
 import React from 'react';
-import { View, Text, ScrollView, Pressable, Alert, Image, Linking } from 'react-native';
+import { View, Text, ScrollView, Pressable, Alert, Linking } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ArrowLeft, Calendar, Clock, MapPin, DollarSign, Info, Check, X, Navigation } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 
-// Mock service data for the details screen
 const mockService = {
   id: 1,
   date: '15/02/2025',
   time: '09:00',
   endTime: '13:00',
   clientName: 'Maria Silva',
-  clientAvatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=900&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTJ8fHBvcnRyYWl0JTIwd29tYW58ZW58MHx8MHx8fDA%3D',
   address: 'Rua das Flores, 123',
   addressDetails: 'Apto 45, Bloco B',
   neighborhood: 'Centro',
   city: 'São Paulo/SP',
   zipCode: '01234-567',
-  price: 150.00,
+  price: 150.0,
   serviceType: 'Limpeza Completa',
-  status: 'confirmed', // Alterado para confirmed conforme solicitado
+  status: 'confirmed',
   observations: 'Possui 2 cachorros. Deixar chave com porteiro. Trazer produtos próprios.',
 };
 
@@ -29,48 +27,46 @@ export default function ServicoDetalhesScreen() {
   const handleOpenMap = () => {
     const address = `${mockService.address}, ${mockService.neighborhood}, ${mockService.city}`;
     const url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
-    Linking.openURL(url).catch(err => Alert.alert('Erro', 'Não foi possível detectar o aplicativo de mapas'));
+    Linking.openURL(url).catch(() => Alert.alert('Erro', 'Não foi possível detectar o aplicativo de mapas'));
   };
 
   const handleAccept = () => {
-    Alert.alert(
-      'Confirmar Serviço',
-      'Deseja confirmar este agendamento?',
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        {
-          text: 'Confirmar',
-          style: 'default',
-          onPress: () => {
-            Alert.alert('Sucesso', 'Serviço confirmado!');
-            router.back();
-          },
+    Alert.alert('Confirmar Serviço', 'Deseja confirmar este agendamento?', [
+      { text: 'Cancelar', style: 'cancel' },
+      {
+        text: 'Confirmar',
+        style: 'default',
+        onPress: () => {
+          Alert.alert('Sucesso', 'Serviço confirmado!');
+          router.back();
         },
-      ]
-    );
+      },
+    ]);
   };
 
   const handleRefuse = () => {
-    Alert.alert(
-      'Recusar Serviço',
-      'Tem certeza que deseja recusar este serviço?',
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        {
-          text: 'Recusar',
-          style: 'destructive',
-          onPress: () => {
-            Alert.alert('Recusado', 'O serviço foi recusado.');
-            router.back();
-          },
+    Alert.alert('Recusar Serviço', 'Tem certeza que deseja recusar este serviço?', [
+      { text: 'Cancelar', style: 'cancel' },
+      {
+        text: 'Recusar',
+        style: 'destructive',
+        onPress: () => {
+          Alert.alert('Recusado', 'O serviço foi recusado.');
+          router.back();
         },
-      ]
-    );
+      },
+    ]);
   };
+
+  const initials = mockService.clientName
+    .split(' ')
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase())
+    .join('');
 
   return (
     <SafeAreaView className="flex-1 bg-background">
-      {/* Header */}
       <View className="bg-primary px-5 pt-4 pb-6">
         <View className="flex-row items-center gap-4 mb-2">
           <Pressable onPress={() => router.back()} className="p-2 -ml-2">
@@ -78,18 +74,12 @@ export default function ServicoDetalhesScreen() {
           </Pressable>
           <View className="flex-1">
             <Text className="text-white text-xl font-bold">Detalhes do Serviço</Text>
-            <Text className="text-orange-100 text-sm">
-              #{mockService.id.toString().padStart(4, '0')}
-            </Text>
+            <Text className="text-orange-100 text-sm">#{mockService.id.toString().padStart(4, '0')}</Text>
           </View>
         </View>
       </View>
 
-      <ScrollView
-        className="flex-1 px-5 pt-6"
-        contentContainerStyle={{ paddingBottom: 140 }}
-      >
-        {/* Date & Time Section */}
+      <ScrollView className="flex-1 px-5 pt-6" contentContainerStyle={{ paddingBottom: 140 }}>
         <View className="bg-card rounded-2xl p-4 mb-4 border border-border shadow-sm">
           <View className="flex-row items-center gap-2 mb-3">
             <Calendar color="#FF6B1A" size={20} />
@@ -107,17 +97,15 @@ export default function ServicoDetalhesScreen() {
           </View>
         </View>
 
-        {/* Client Section */}
         <View className="bg-card rounded-2xl p-4 mb-4 border border-border shadow-sm">
           <View className="flex-row items-center gap-2 mb-3">
             <Text className="text-lg">👤</Text>
             <Text className="text-foreground font-semibold">Cliente</Text>
           </View>
           <View className="flex-row items-center gap-4">
-            <Image
-              source={{ uri: mockService.clientAvatar }}
-              className="w-16 h-16 rounded-full"
-            />
+            <View className="w-16 h-16 rounded-full bg-primary items-center justify-center">
+              <Text className="text-white text-xl font-bold">{initials || 'C'}</Text>
+            </View>
             <View className="flex-1">
               <Text className="text-foreground text-lg font-bold">{mockService.clientName}</Text>
               <Text className="text-muted-foreground text-sm mt-1">Cliente Verificado</Text>
@@ -125,7 +113,6 @@ export default function ServicoDetalhesScreen() {
           </View>
         </View>
 
-        {/* Address Section */}
         <View className="bg-card rounded-2xl p-4 mb-4 border border-border shadow-sm">
           <View className="flex-row items-center justify-between mb-3">
             <View className="flex-row items-center gap-2">
@@ -140,39 +127,29 @@ export default function ServicoDetalhesScreen() {
           <View className="space-y-1">
             <Text className="text-foreground font-medium">{mockService.address}</Text>
             <Text className="text-muted-foreground text-sm">{mockService.addressDetails}</Text>
-            <Text className="text-muted-foreground text-sm">{mockService.neighborhood} - {mockService.city}</Text>
+            <Text className="text-muted-foreground text-sm">
+              {mockService.neighborhood} - {mockService.city}
+            </Text>
             <Text className="text-muted-foreground text-xs">CEP: {mockService.zipCode}</Text>
           </View>
 
-          {/* Map Placeholder */}
-          <View className="mt-3 h-32 bg-gray-100 rounded-xl overflow-hidden relative">
-            <Image
-              source={{ uri: "https://images.unsplash.com/photo-1524661135-423995f22d0b?w=900&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NHx8Q2l0eSUyMG1hcHxlbnwwfHwwfHx8MA%3D%3D" }}
-              className="w-full h-full opacity-60"
-              resizeMode="cover"
-            />
-            <View className="absolute inset-0 flex items-center justify-center">
-              <View className="bg-white/90 px-4 py-2 rounded-full shadow-sm flex-row items-center gap-2">
-                <MapPin color="#FF6B1A" size={16} />
-                <Text className="text-foreground text-xs font-semibold">Localização do Serviço</Text>
-              </View>
+          <View className="mt-3 h-32 bg-gray-100 rounded-xl overflow-hidden relative items-center justify-center">
+            <View className="bg-white px-4 py-2 rounded-full shadow-sm flex-row items-center gap-2">
+              <MapPin color="#FF6B1A" size={16} />
+              <Text className="text-foreground text-xs font-semibold">Localização do Serviço</Text>
             </View>
           </View>
         </View>
 
-        {/* Price Section */}
         <View className="bg-card rounded-2xl p-4 mb-4 border border-border shadow-sm">
           <View className="flex-row items-center gap-2 mb-3">
             <DollarSign color="#7CB342" size={20} />
             <Text className="text-foreground font-semibold">Valor a Receber</Text>
           </View>
-          <Text className="text-green-600 text-3xl font-bold">
-            R$ {mockService.price.toFixed(2)}
-          </Text>
+          <Text className="text-green-600 text-3xl font-bold">R$ {mockService.price.toFixed(2)}</Text>
           <Text className="text-muted-foreground text-sm mt-1">Pagamento na entrega do serviço</Text>
         </View>
 
-        {/* Service Details Section */}
         <View className="bg-card rounded-2xl p-4 mb-4 border border-border shadow-sm">
           <View className="flex-row items-center gap-2 mb-3">
             <Info color="#3B82F6" size={20} />
@@ -187,15 +164,12 @@ export default function ServicoDetalhesScreen() {
           <View>
             <Text className="text-muted-foreground text-xs uppercase tracking-wide mb-1">Observações</Text>
             <View className="bg-orange-50 p-3 rounded-xl border border-orange-100">
-              <Text className="text-foreground text-sm leading-relaxed">
-                {mockService.observations}
-              </Text>
+              <Text className="text-foreground text-sm leading-relaxed">{mockService.observations}</Text>
             </View>
           </View>
         </View>
       </ScrollView>
 
-      {/* Fixed Bottom Action Buttons */}
       <View className="absolute bottom-0 left-0 right-0 bg-background border-t border-border p-4 safe-area-bottom">
         {mockService.status === 'pending' ? (
           <View className="flex-row gap-3">
