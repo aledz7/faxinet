@@ -1,8 +1,9 @@
-import React from 'react';
-import { View, Text, ScrollView, Pressable, Alert, Linking } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, ScrollView, Pressable, Alert, Linking, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { ArrowLeft, Calendar, Clock, MapPin, DollarSign, Info, Check, X, Navigation } from 'lucide-react-native';
+import { ArrowLeft, Calendar, Clock, MapPin, DollarSign, Info, Check, X, Navigation, Camera } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
+import * as ImagePicker from 'expo-image-picker';
 
 const mockService = {
   id: 1,
@@ -23,6 +24,46 @@ const mockService = {
 
 export default function ServicoDetalhesScreen() {
   const router = useRouter();
+  const [beforePhotoUris, setBeforePhotoUris] = useState<string[]>([]);
+  const [afterPhotoUris, setAfterPhotoUris] = useState<string[]>([]);
+
+  const handlePickPhoto = async (type: 'before' | 'after') => {
+    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+    if (!permission.granted) {
+      Alert.alert('Permissão necessária', 'Permita o acesso às fotos para anexar imagens do serviço.');
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: false,
+      allowsMultipleSelection: true,
+      selectionLimit: 10,
+      quality: 0.7,
+    });
+
+    if (result.canceled || result.assets.length === 0) {
+      return;
+    }
+
+    const selectedPhotos = result.assets.map((asset) => asset.uri).filter(Boolean);
+    if (type === 'before') {
+      setBeforePhotoUris((prev) => [...new Set([...prev, ...selectedPhotos])]);
+      return;
+    }
+
+    setAfterPhotoUris((prev) => [...new Set([...prev, ...selectedPhotos])]);
+  };
+
+  const handleRemovePhoto = (type: 'before' | 'after', photoUri: string) => {
+    if (type === 'before') {
+      setBeforePhotoUris((prev) => prev.filter((uri) => uri !== photoUri));
+      return;
+    }
+
+    setAfterPhotoUris((prev) => prev.filter((uri) => uri !== photoUri));
+  };
 
   const handleOpenMap = () => {
     const address = `${mockService.address}, ${mockService.neighborhood}, ${mockService.city}`;
@@ -166,6 +207,82 @@ export default function ServicoDetalhesScreen() {
             <View className="bg-orange-50 p-3 rounded-xl border border-orange-100">
               <Text className="text-foreground text-sm leading-relaxed">{mockService.observations}</Text>
             </View>
+          </View>
+        </View>
+
+        <View className="bg-card rounded-2xl p-4 mb-4 border border-border shadow-sm">
+          <View className="flex-row items-center gap-2 mb-3">
+            <Camera color="#FF6B1A" size={20} />
+            <Text className="text-foreground font-semibold">Fotos do Serviço</Text>
+          </View>
+          <Text className="text-muted-foreground text-sm mb-4">Opcional: adicione fotos do antes e do depois.</Text>
+
+          <View className="mb-4">
+            <Text className="text-muted-foreground text-xs uppercase tracking-wide mb-2">Fotos do Antes ({beforePhotoUris.length})</Text>
+            {beforePhotoUris.length > 0 ? (
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mb-2">
+                <View className="flex-row gap-2">
+                  {beforePhotoUris.map((photoUri, index) => (
+                    <View key={`${photoUri}-${index}`} className="relative">
+                      <Image source={{ uri: photoUri }} className="w-28 h-28 rounded-xl" resizeMode="cover" />
+                      <Pressable
+                        onPress={() => handleRemovePhoto('before', photoUri)}
+                        className="absolute -top-2 -right-2 w-7 h-7 rounded-full bg-black/70 items-center justify-center"
+                      >
+                        <X color="white" size={14} />
+                      </Pressable>
+                    </View>
+                  ))}
+                </View>
+              </ScrollView>
+            ) : (
+              <View className="w-full h-28 rounded-xl border border-dashed border-orange-200 bg-orange-50 items-center justify-center mb-2">
+                <Text className="text-primary text-sm font-medium">Nenhuma foto adicionada no antes</Text>
+              </View>
+            )}
+            <Pressable
+              onPress={() => handlePickPhoto('before')}
+              className="bg-orange-50 py-3 rounded-xl flex-row items-center justify-center gap-2"
+            >
+              <Camera color="#FF6B1A" size={16} />
+              <Text className="text-primary font-semibold">
+                {beforePhotoUris.length > 0 ? 'Adicionar mais fotos do antes' : 'Adicionar fotos do antes'}
+              </Text>
+            </Pressable>
+          </View>
+
+          <View>
+            <Text className="text-muted-foreground text-xs uppercase tracking-wide mb-2">Fotos do Depois ({afterPhotoUris.length})</Text>
+            {afterPhotoUris.length > 0 ? (
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mb-2">
+                <View className="flex-row gap-2">
+                  {afterPhotoUris.map((photoUri, index) => (
+                    <View key={`${photoUri}-${index}`} className="relative">
+                      <Image source={{ uri: photoUri }} className="w-28 h-28 rounded-xl" resizeMode="cover" />
+                      <Pressable
+                        onPress={() => handleRemovePhoto('after', photoUri)}
+                        className="absolute -top-2 -right-2 w-7 h-7 rounded-full bg-black/70 items-center justify-center"
+                      >
+                        <X color="white" size={14} />
+                      </Pressable>
+                    </View>
+                  ))}
+                </View>
+              </ScrollView>
+            ) : (
+              <View className="w-full h-28 rounded-xl border border-dashed border-orange-200 bg-orange-50 items-center justify-center mb-2">
+                <Text className="text-primary text-sm font-medium">Nenhuma foto adicionada no depois</Text>
+              </View>
+            )}
+            <Pressable
+              onPress={() => handlePickPhoto('after')}
+              className="bg-orange-50 py-3 rounded-xl flex-row items-center justify-center gap-2"
+            >
+              <Camera color="#FF6B1A" size={16} />
+              <Text className="text-primary font-semibold">
+                {afterPhotoUris.length > 0 ? 'Adicionar mais fotos do depois' : 'Adicionar fotos do depois'}
+              </Text>
+            </Pressable>
           </View>
         </View>
       </ScrollView>
